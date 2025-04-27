@@ -20,47 +20,69 @@ def ler_texto(mensagem):
             print("Este campo é obrigatório.")
 
 def cadastrar_avaliacao():
-    print("\n--- Cadastra de Avaliação ---")
-    nome_projeto = ler_texto("Nome do projeto: ")
-    qualidade = ler_nota("Nota para qualidade (0-10): ")
-    prazo = ler_nota("Nota para prazo (0-10): ")
-    inovacao = ler_nota("Nota para inovação (0-10): ")
-    comentario = ler_texto("Comentário sobre o projeto: ")
+    while True:
+        print("\n--- Cadastro de Avaliação ---")
+        nome_projeto = ler_texto("Nome do projeto: ")
+        qualidade = ler_nota("Nota para qualidade (0-10): ")
+        prazo = ler_nota("Nota para prazo (0-10): ")
+        inovacao = ler_nota("Nota para inovação (0-10): ")
+        comentario = ler_texto("Comentário sobre o projeto: ")
 
-    media = (qualidade + prazo + inovacao)/3
+        media = (qualidade + prazo + inovacao) / 3
 
-    avaliacao = {
-        "nome": nome_projeto,
-        "qualidade": qualidade,
-        "prazo": prazo,
-        "inovacao": inovacao,
-        "comentario": comentario,
-        "media": media
-    }
+        avaliacao = {
+            "nome": nome_projeto,
+            "qualidade": qualidade,
+            "prazo": prazo,
+            "inovacao": inovacao,
+            "comentario": comentario,
+            "media": media
+        }
 
-    avaliacoes.append(avaliacao)
-    print("Avaliação cadastra com sucesso!")
+        avaliacoes.append(avaliacao)
+        print("Avaliação cadastrada com sucesso!")
+
+        opcao = input("\nDeseja cadastrar outra avaliação? (s/n): ").lower()
+        if opcao != 's':
+            break
 
 def listar_avaliacoes():
-    if not avaliacoes:
-        print("\nNenhuma avaliação cadastrada.")
-        return
-    
-    print("\n--- Lista de Avaliações ---")
-    for idx, av in enumerate(avaliacoes, start=1):
-        print(f"\nAvaliação {idx}:")
-        print(f"Projeto: {av['nome']}")
-        print(f"Qualidade: {av['qualidade']}")
-        print(f"Prazo: {av['prazo']}")
-        print(f"Inovação: {av['inovacao']}")
-        print(f"Média Final: {av['media']:.2f}")
-        print(f"Comentário: {av['comentario']}")
+    while True:
+        if not avaliacoes:
+            print("\nNenhuma avaliação cadastrada.")
+            break
+
+        print("\n--- Lista de Avaliações ---")
+        for idx, av in enumerate(avaliacoes, start=1):
+            print(f"\nAvaliação {idx}:")
+            print(f"Projeto: {av['nome']}")
+            print(f"Qualidade: {av['qualidade']}")
+            print(f"Prazo: {av['prazo']}")
+            print(f"Inovação: {av['inovacao']}")
+            print(f"Média Final: {av['media']:.2f}")
+            print(f"Comentário: {av['comentario']}")
+
+        print("\nPressione qualquer tecla para voltar ao menu principal...")
+        input()
+        break 
 
 def gerar_relatorio():
-    if not avaliacoes:
-        print("\nNão há avaliações cadastradas ainda.")
-        print("Cadastre pelo menos uma avaliação antes de gerar o relatório.")
-        return
+    while True:
+        if not avaliacoes:
+            print("\nNão há avaliações cadastradas ainda.")
+            print("Cadastre pelo menos uma avaliação antes de gerar o relatório.")
+            break
+
+        print("\n=== Relatório de Desempenho dos Projetos ===")
+        for av in avaliacoes:
+            status = "Aprovado" if av["media"] >= 7 else "Reprovado"
+            print(f"\nProjeto: {av['nome']}")
+            print(f"Média: {av['media']:.2f} - {status}")
+            print(f"Comentário: {av['comentario']}")
+
+        print("\nPressione qualquer tecla para voltar ao menu principal...")
+        input() 
+        break
 
     print("\n=== Relatório de Desempenho dos Projetos ===")
     for av in avaliacoes:
