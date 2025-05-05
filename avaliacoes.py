@@ -1,3 +1,5 @@
+from database import DatabaseConnection, Avaliacao
+
 avaliacoes = []
 
 def ler_nota(mensagem):
@@ -20,6 +22,12 @@ def ler_texto(mensagem):
             print("Este campo é obrigatório.")
 
 def cadastrar_avaliacao():
+
+    #CONECTA AO BANCO#
+    db = DatabaseConnection()
+    db.connect()
+    avaliacao_crud = Avaliacao(db)
+
     while True:
         print("\n--- Cadastro de Avaliação ---")
         nome_projeto = ler_texto("Nome do projeto: ")
@@ -42,9 +50,17 @@ def cadastrar_avaliacao():
         avaliacoes.append(avaliacao)
         print("Avaliação cadastrada com sucesso!")
 
+        #SALVAR NO BANCO DE DADOS#
+        avaliacao_crud.create(
+            nome_projeto,qualidade,prazo,inovacao,media,comentario
+        )
+
         opcao = input("\nDeseja cadastrar outra avaliação? (s/n): ").lower()
         if opcao != 's':
             break
+
+        #FECHA CONEXAO#
+        db.close()
 
 def listar_avaliacoes():
     while True:
