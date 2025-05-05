@@ -3,7 +3,7 @@ from mysql.connector import Error
 import os
 from dotenv import load_dotenv
 
-#Pega Os dados do arquivo .env#
+#Pega Os dados do arquivo .env para facilitar#
 load_dotenv()
 
 
