@@ -114,6 +114,7 @@ def main():
         print("2 - Listar Avaliações")
         print("3 - Gerar Relatório de Desempenho")
         print("4 - Sair")
+        print("5 - Ajuda")
         opcao = input("Escolha uma opção: ")
 
         if opcao == '1':
@@ -125,8 +126,41 @@ def main():
         elif opcao == '4':
             print("Saindo do sistema...")
             break
+        elif opcao == '5':
+            mostrar_ajuda()
         else:
-            print("Opção inválida. Tente novamente.")
+            print("Opção inválida. Tente novamente.")    
+
+def mostrar_ajuda():
+    print("\n=== Guia de Ajuda ===")
+    print("""
+Este sistema permite avaliar projetos com base em critérios objetivos e comentários subjetivos.
+A seguir, veja o que cada opção do menu faz:
+
+1 - Cadastrar Avaliação:
+    Permite inserir uma nova avaliação para um projeto.
+    O sistema pedirá:
+      - Nome do projeto
+      - Notas de Qualidade, Prazo e Inovação (0 a 10)
+      - Comentário geral
+    Após o cadastro, a média será calculada automaticamente.
+
+2 - Listar Avaliações:
+    Exibe todas as avaliações cadastradas até o momento, com suas respectivas notas, comentários e média final.
+    Pressione qualquer tecla para voltar ao menu principal.
+
+3 - Gerar Relatório de Desempenho:
+    Gera um relatório com a média de cada projeto e seu status (Aprovado ou Reprovado).
+    Apenas disponível se houver avaliações registradas.
+    Pressione qualquer tecla para voltar ao menu principal.
+
+4 - Sair:
+    Encerra o programa.
+
+5 - Ajuda:
+    Mostra esta tela com informações sobre as funcionalidades do sistema.
+""")
+    input("Pressione qualquer tecla para voltar ao menu principal...")
 
 if __name__ == "__main__":
     main()
