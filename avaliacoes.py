@@ -89,23 +89,17 @@ def gerar_relatorio():
             print("Cadastre pelo menos uma avaliação antes de gerar o relatório.")
             break
 
-        print("\n=== Relatório de Desempenho dos Projetos ===")
-        for av in avaliacoes:
-            status = "Aprovado" if av["media"] >= 7 else "Reprovado"
-            print(f"\nProjeto: {av['nome']}")
-            print(f"Média: {av['media']:.2f} - {status}")
-            print(f"Comentário: {av['comentario']}")
+        else:
+            print("\n=== Relatório de Desempenho dos Projetos ===")
+            for av in avaliacoes:
+                status = "Aprovado" if av["media"] >= 7 else "Reprovado"
+                print(f"\nProjeto: {av['nome']}")
+                print(f"Média: {av['media']:.2f} - {status}")
+                print(f"Comentário: {av['comentario']}")
 
-        print("\nPressione qualquer tecla para voltar ao menu principal...")
-        input() 
-        break
-
-    print("\n=== Relatório de Desempenho dos Projetos ===")
-    for av in avaliacoes:
-        status = "Aprovado" if av["media"] >= 7 else "Reprovado"
-        print(f"\nProjeto: {av['nome']}")
-        print(f"Média: {av['media']:.2f} - {status}")
-        print(f"Comentário: {av['comentario']}")
+            print("\nPressione qualquer tecla para voltar ao menu principal...")
+            input() 
+            break
 
 def main():
     while True:
@@ -121,8 +115,18 @@ def main():
             cadastrar_avaliacao()
         elif opcao == '2':
             listar_avaliacoes()
+            db = DatabaseConnection()
+            db.connect()
+            avaliacao_crud = Avaliacao(db)
+            avaliacao_crud.listar_todos()
+            db.close()
         elif opcao == '3':
             gerar_relatorio()
+            db = DatabaseConnection()
+            db.connect()
+            avaliacao_crud = Avaliacao(db)
+            avaliacao_crud.relatorio_desempenho()
+            db.close()
         elif opcao == '4':
             print("Saindo do sistema...")
             break
