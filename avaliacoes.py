@@ -1,3 +1,4 @@
+#conexão BD
 from database import Database
 
 db = Database()
