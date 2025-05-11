@@ -1,104 +1,87 @@
 import mysql.connector
 from mysql.connector import Error
-import os
-from dotenv import load_dotenv
 
-#Pega Os dados do arquivo .env para facilitar#
-load_dotenv()
-
-
-class DatabaseConnection:
-    def __init__(self):
-        
-        #Carrega as configurações diretamente das varaiavesi de ambiente#
-        self.host = os.getenv('DB_HOST')
-        self.user = os.getenv('DB_USER')
-        self.password = os.getenv('DB_PASSWORD')
-        self.database = os.getenv('DB_DATABASE')
+class Database:
+    def __init__(self, host="localhost", user="root", password="Ar@58425873", database="avaliacao_de_projetos"):
+        self.config = {
+            'host': host,
+            'user': user,
+            'password': password,
+            'database': database
+        }
         self.connection = None
-        self.cursor = None
-    
+        self.connect()
+
     def connect(self):
         try:
-            self.connection = mysql.connector.connect(
-                host = self.host,
-                user = self.user,
-                password = self.password,
-                database = self.database
-            )
-            self.cursor = self.connection.cursor()
-            print(f"Conexão estabelecida com sucesso!")
+            self.connection = mysql.connector.connect(**self.config)
+            if self.connection.is_connected():
+                print("Conexão ao MySQL estabelecida com sucesso!")
         except Error as e:
-            print(f"Conexão não foi estabelecida error!: {e}")
+            print(f"Erro ao conectar ao MySQL: {e}")
 
+    def disconnect(self):
+        if self.connection and self.connection.is_connected():
+            self.connection.close()
 
-
-class Avaliacao:
-    def __init__(self,db_connection):
-        self.db_connection = db_connection
-
-    def create(self,nome_projeto, qualidade, prazo, inovacao, media, comentario):
-        try: 
-            sql = """insert into Avaliacao(nome_projeto, qualidade, prazo, inovacao, media, comentario)
-            values (%s,%s,%s,%s,%s,%s)"""
-
-            values = (nome_projeto, qualidade, prazo, inovacao, media, comentario)
-            self.db_connection.cursor.execute(sql,values)
-            self.db_connection.connection.commit()
-            print(f"Avaliação do projeto {nome_projeto} salvo com sucesso no Banco de dados ")
-        except Error as e:
-            print("Erro a salvar avaliação: {e}")
-            self.db_connection.connection.rollback()
-
-    def listar_todos(self):
+    def cadastrar_avaliacao(self, nome_projeto, qualidade, prazo, inovacao, comentario):
         try:
-            sql = "SELECT nome_projeto, qualidade, prazo, inovacao, media, comentario FROM Avaliacao"
-            self.db_connection.cursor.execute(sql)
-            resultados = self.db_connection.cursor.fetchall()
-            print("\n=== Avaliações ===")
-            for idx, row in enumerate(resultados, start=1):
-                print(f"\nAvaliação {idx}:")
-                print(f"Projeto: {row[0]}")
-                print(f"Qualidade: {row[1]}")
-                print(f"Prazo: {row[2]}")
-                print(f"Inovação: {row[3]}")
-                print(f"Média Final: {row[4]:.2f}")
-                print(f"Comentário: {row[5]}")
+            media = (qualidade + prazo + inovacao) / 3
+            query = """
+                INSERT INTO Avaliacao (nome_projeto, qualidade, prazo, inovacao, comentario, media)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            values = (nome_projeto, qualidade, prazo, inovacao, comentario, media)
+            cursor = self.connection.cursor()
+            cursor.execute(query, values)
+            self.connection.commit()
+            print("Avaliação cadastrada com sucesso!")
+            return True
         except Error as e:
-            print(f"Erro ao buscar avaliações: {e}")
+            print(f"Erro ao cadastrar avaliação: {e}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
 
-    def relatorio_desempenho(self):
+    def verificar_projeto_existente(self, nome_projeto):
         try:
-            sql = "SELECT nome_projeto, media, comentario FROM Avaliacao"
-            self.db_connection.cursor.execute(sql)
-            resultados = self.db_connection.cursor.fetchall()
-            
-            if not resultados:
-                print("\nNenhum projeto encontrado no banco de dados.")
-                return
+            query = "SELECT COUNT(*) FROM Avaliacao WHERE nome_projeto = %s"
+            cursor = self.connection.cursor()
+            cursor.execute(query, (nome_projeto,))
+            count = cursor.fetchone()[0]
+            return count > 0
+        except Error as e:
+            print(f"Erro ao verificar projeto: {e}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
 
-            print("\n=== Relatório de Desempenho dos Projetos ===")
-            for projeto in resultados:
-                nome, media, comentario = projeto
-                status = "Aprovado" if media >= 7 else "Reprovado"
-                print(f"\nProjeto: {nome}")
-                print(f"Média: {media:.2f} - {status}")
-                print(f"Comentário: {comentario}")
+    def listar_avaliacoes(self):
+        try:
+            query = "SELECT * FROM Avaliacao"
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute(query)
+            avaliacoes = cursor.fetchall()
+            return avaliacoes
+        except Error as e:
+            print(f"Erro ao listar avaliações: {e}")
+            return []
+        finally:
+            if cursor:
+                cursor.close()
+
+    def gerar_relatorio_por_id(self, id_avaliacao):
+        try:
+            query = "SELECT * FROM Avaliacao WHERE id_avaliacao = %s"
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute(query, (id_avaliacao,))
+            avaliacao = cursor.fetchone()
+            return avaliacao
         except Error as e:
             print(f"Erro ao gerar relatório: {e}")
-
-#Fecha a conexão com banco de dados#
-    def close(self):
-        if self.cursor:
-            self.cursor.close()
-        if self.connection:
-            self.connection.close() 
-            print("A conexão foi fechada!")
-            
-if __name__ ==  "__main__":
-    db = DatabaseConnection()
-    db.connect()
-    db.close()
-
-
-        
+            return None
+        finally:
+            if cursor:
+                cursor.close()

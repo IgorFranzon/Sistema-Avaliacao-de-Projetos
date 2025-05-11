@@ -1,6 +1,6 @@
-from database import DatabaseConnection, Avaliacao
+from database import Database
 
-avaliacoes = []
+db = Database()
 
 def ler_nota(mensagem):
     while True:
@@ -13,6 +13,8 @@ def ler_nota(mensagem):
         except ValueError:
             print("Digite um número válido.")
 
+
+
 def ler_texto(mensagem):
     while True:
         texto = input(mensagem).strip()
@@ -21,119 +23,120 @@ def ler_texto(mensagem):
         else:
             print("Este campo é obrigatório.")
 
+
 def cadastrar_avaliacao():
-
-    #CONECTA AO BANCO#
-    db = DatabaseConnection()
-    db.connect()
-    avaliacao_crud = Avaliacao(db)
-
     while True:
         print("\n--- Cadastro de Avaliação ---")
         nome_projeto = ler_texto("Nome do projeto: ")
+        
+        # Verificar se o projeto já existe
+        if db.verificar_projeto_existente(nome_projeto):
+            print(f"\nJá existe uma avaliação para o projeto '{nome_projeto}'.")
+            while True:
+                resposta = input("\n Deseja tentar outro nome? (S/N): ").strip().upper()
+                if resposta in ('S', 'N'):
+                    break
+                print("\n Por favor, digite apenas 'S' ou 'N'.")
+            if resposta == 'N':
+                break
+            continue
+
         qualidade = ler_nota("Nota para qualidade (0-10): ")
         prazo = ler_nota("Nota para prazo (0-10): ")
         inovacao = ler_nota("Nota para inovação (0-10): ")
         comentario = ler_texto("Comentário sobre o projeto: ")
+        
+        if db.cadastrar_avaliacao(nome_projeto, qualidade, prazo, inovacao, comentario):
 
-        media = (qualidade + prazo + inovacao) / 3
+            while True:
+                resposta = input("\n Você gostaria de cadastrar um novo projeto? (S/N): ").strip().upper()
+                if resposta in ('S', 'N'):
+                    break
+                print("\n Por favor, digite apenas 'S' ou 'N'.")
+        
+            if resposta == 'S':
+                continue
+        break
 
-        avaliacao = {
-            "nome": nome_projeto,
-            "qualidade": qualidade,
-            "prazo": prazo,
-            "inovacao": inovacao,
-            "comentario": comentario,
-            "media": media
-        }
-
-        avaliacoes.append(avaliacao)
-        print("Avaliação cadastrada com sucesso!")
-
-        #SALVAR NO BANCO DE DADOS#
-        avaliacao_crud.create(
-            nome_projeto,qualidade,prazo,inovacao,media,comentario
-        )
-
-        opcao = input("\nDeseja cadastrar outra avaliação? (s/n): ").lower()
-        if opcao != 's':
-            break
-
-        #FECHA CONEXAO#
-        db.close()
 
 def listar_avaliacoes():
-    while True:
+        avaliacoes = db.listar_avaliacoes()
+
         if not avaliacoes:
             print("\nNenhuma avaliação cadastrada.")
-            break
+            return
 
         print("\n--- Lista de Avaliações ---")
-        for idx, av in enumerate(avaliacoes, start=1):
-            print(f"\nAvaliação {idx}:")
-            print(f"Projeto: {av['nome']}")
+        for av in avaliacoes:
+            status = "Aprovado" if av['media'] >= 7 else "Reprovado"
+            print(f"\nAvaliação: {av['id_avaliacao']}")
+            print(f"Projeto: {av['nome_projeto']}")
             print(f"Qualidade: {av['qualidade']}")
             print(f"Prazo: {av['prazo']}")
             print(f"Inovação: {av['inovacao']}")
             print(f"Média Final: {av['media']:.2f}")
             print(f"Comentário: {av['comentario']}")
+            print(f"Status: {status}")
+        
+        input("\n Pressione Enter para voltar ao menu principal")
 
-        print("\nPressione qualquer tecla para voltar ao menu principal...")
-        input()
-        break 
 
 def gerar_relatorio():
     while True:
-        if not avaliacoes:
-            print("\nNão há avaliações cadastradas ainda.")
-            print("Cadastre pelo menos uma avaliação antes de gerar o relatório.")
-            break
+        id_avaliacao = ler_texto("\nDigite o ID da avaliação para o relatório: ")
+        try:
+            id_avaliacao = int(id_avaliacao)
+            avaliacao = db.gerar_relatorio_por_id(id_avaliacao)
+            if not avaliacao:
+                print(f"\nNenhuma avaliação encontrada com ID {id_avaliacao}.")
+                
+                input("\nPressione Enter para tentar novamente")
+                continue
 
-        else:
-            print("\n=== Relatório de Desempenho dos Projetos ===")
-            for av in avaliacoes:
-                status = "Aprovado" if av["media"] >= 7 else "Reprovado"
-                print(f"\nProjeto: {av['nome']}")
-                print(f"Média: {av['media']:.2f} - {status}")
-                print(f"Comentário: {av['comentario']}")
-
-            print("\nPressione qualquer tecla para voltar ao menu principal...")
-            input() 
+            status = "Aprovado" if avaliacao['media'] >= 7 else "Reprovado"
+            print("\n=== Relatório de Desempenho do Projeto ===")
+            print(f"\nAvaliação: {avaliacao['id_avaliacao']}")
+            print(f"Projeto: {avaliacao['nome_projeto']}")
+            print(f"Qualidade: {avaliacao['qualidade']}")
+            print(f"Prazo: {avaliacao['prazo']}")
+            print(f"Inovação: {avaliacao['inovacao']}")
+            print(f"Comentário: {avaliacao['comentario']}")
+            print(f"Média: {avaliacao['media']:.2f} - {status}")
+            input("\n Pressione Enter para voltar ao menu principal")
             break
+        
+        except ValueError:
+            print("ID inválido. Digite uum ID válido.")
+            
+            input("\n Pressione Enter pra tentar novamente")
+            continue
 
 def main():
-    while True:
-        print("\n=== Sistema de Avaliação de Projetos ===")
-        print("1 - Cadastrar Avaliação")
-        print("2 - Listar Avaliações")
-        print("3 - Gerar Relatório de Desempenho")
-        print("4 - Sair")
-        print("5 - Ajuda")
-        opcao = input("Escolha uma opção: ")
+    try:
+        while True:
+            print("\n=== Sistema de Avaliação de Projetos ===")
+            print("1 - Cadastrar Avaliação")
+            print("2 - Listar Avaliações")
+            print("3 - Gerar Relatório de Desempenho")
+            print("4 - Sair")
+            print("5 - Ajuda")
+            opcao = input("Escolha uma opção: ")
 
-        if opcao == '1':
-            cadastrar_avaliacao()
-        elif opcao == '2':
-            listar_avaliacoes()
-            db = DatabaseConnection()
-            db.connect()
-            avaliacao_crud = Avaliacao(db)
-            avaliacao_crud.listar_todos()
-            db.close()
-        elif opcao == '3':
-            gerar_relatorio()
-            db = DatabaseConnection()
-            db.connect()
-            avaliacao_crud = Avaliacao(db)
-            avaliacao_crud.relatorio_desempenho()
-            db.close()
-        elif opcao == '4':
-            print("Saindo do sistema...")
-            break
-        elif opcao == '5':
-            mostrar_ajuda()
-        else:
-            print("Opção inválida. Tente novamente.")    
+            if opcao == '1':
+                cadastrar_avaliacao()
+            elif opcao == '2':
+                listar_avaliacoes()
+            elif opcao == '3':
+                gerar_relatorio()
+            elif opcao == '4':
+                print("Saindo do sistema...")
+                break
+            elif opcao == '5':
+                mostrar_ajuda()
+            else:
+                print("Opção inválida. Tente novamente.")
+    finally:
+        db.disconnect()     
 
 def mostrar_ajuda():
     print("\n=== Guia de Ajuda ===")
