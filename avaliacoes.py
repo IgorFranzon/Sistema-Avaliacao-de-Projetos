@@ -59,6 +59,36 @@ def cadastrar_avaliacao():
                 continue
         break
 
+#Tela de Login
+def tela_login():
+    print("\n=== Tela de Login ===")
+    tentativas = 3
+
+    # Credenciais fixas (poderiam vir de um banco de dados)
+    usuario_correto = "admin"
+    senha_correta = "admin1234"  # Exemplo com 9 caracteres
+
+    if len(senha_correta) < 8:
+        print("Erro de configuração: a senha do administrador deve ter pelo menos 8 caracteres.")
+        return False
+
+    while tentativas > 0:
+        usuario = input("Usuário: ").strip()
+        senha = input("Senha (mínimo 8 caracteres): ").strip()
+
+        if len(senha) < 8:
+            print("A senha deve conter pelo menos 8 caracteres.")
+            continue
+
+        if usuario == usuario_correto and senha == senha_correta:
+            print("\nLogin bem-sucedido! Bem-vindo(a), administrador.")
+            return True
+        else:
+            tentativas -= 1
+            print(f"Usuário ou senha incorretos. Tentativas restantes: {tentativas}")
+    
+    print("\nVocê excedeu o número de tentativas. Encerrando o sistema.")
+    return False
 
 def listar_avaliacoes():
         avaliacoes = db.listar_avaliacoes()
@@ -113,6 +143,9 @@ def gerar_relatorio():
             continue
 
 def main():
+    if not tela_login():
+        return
+
     try:
         while True:
             print("\n=== Sistema de Avaliação de Projetos ===")
